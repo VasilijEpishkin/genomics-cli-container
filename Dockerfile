@@ -67,7 +67,35 @@ RUN set -eux; \
     make install; \
     rm -rf /tmp/build/samtools
 
-ENV PATH="${SOFT}/libdeflate_1.26/bin:${SOFT}/htslib_1.24/bin:${SOFT}/samtools_1.24/bin:${PATH}"
+# BCFtools 1.24 — official release dated 2026-07-09.
+ENV BCFTOOLS=${SOFT}/bcftools_1.24/bin/bcftools
+RUN set -eux; \
+    mkdir -p /tmp/build/bcftools; \
+    curl -fsSL https://github.com/samtools/bcftools/releases/download/1.24/bcftools-1.24.tar.bz2 \
+      | tar -xj --strip-components=1 -C /tmp/build/bcftools; \
+    cd /tmp/build/bcftools; \
+    CPPFLAGS="-I${HTSLIB}/include" \
+    LDFLAGS="-L${HTSLIB}/lib -Wl,-rpath,${HTSLIB}/lib -Wl,-rpath,${LIBDEFLATE}/lib" \
+      ./configure --prefix="${SOFT}/bcftools_1.24" --with-htslib="${HTSLIB}"; \
+    make -j"$(nproc)"; \
+    make install; \
+    rm -rf /tmp/build/bcftools
+
+# VCFtools 0.1.17 — official release dated 2025-05-15.
+ENV VCFTOOLS=${SOFT}/vcftools_0.1.17/bin/vcftools
+RUN set -eux; \
+    mkdir -p /tmp/build/vcftools; \
+    curl -fsSL https://github.com/vcftools/vcftools/releases/download/v0.1.17/vcftools-0.1.17.tar.gz \
+      | tar -xz --strip-components=1 -C /tmp/build/vcftools; \
+    cd /tmp/build/vcftools; \
+    ./configure --prefix="${SOFT}/vcftools_0.1.17"; \
+    make -j"$(nproc)"; \
+    make install; \
+    rm -rf /tmp/build/vcftools
+
+ENV PATH="${SOFT}/libdeflate_1.26/bin:${SOFT}/htslib_1.24/bin:${SOFT}/samtools_1.24/bin:${SOFT}/bcftools_1.24/bin:${SOFT}/vcftools_0.1.17/bin:${PATH}"
 ENV LD_LIBRARY_PATH="${SOFT}/libdeflate_1.26/lib:${SOFT}/htslib_1.24/lib:${LD_LIBRARY_PATH}"
+ENV PKG_CONFIG_PATH="${SOFT}/htslib_1.24/lib/pkgconfig:${SOFT}/libdeflate_1.26/lib/pkgconfig:${PKG_CONFIG_PATH}"
+
 WORKDIR /work
 CMD ["bash"]
