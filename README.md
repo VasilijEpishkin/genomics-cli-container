@@ -1,15 +1,10 @@
 # Genomics CLI container
 
-Container based on the official Ubuntu 22.04 image. Shared build dependencies are installed before the bioinformatics toolchain.
+The image uses Ubuntu 22.04 and builds libdeflate 1.26, HTSlib 1.24 and SAMtools 1.24 from their official upstream releases. Each component is installed under its own versioned directory in `/soft`.
 
-## Build
+## Build and interactive use
 
 ```bash
 docker build --pull -t seqtools:1.0 .
-```
-
-## Run interactively
-
-```bash
 docker run --rm -it seqtools:1.0
 ```

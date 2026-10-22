@@ -25,5 +25,49 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p "${SOFT}" /tmp/build
 
+# libdeflate 1.26 — official release dated 2026-08-22.
+ENV LIBDEFLATE=${SOFT}/libdeflate_1.26
+RUN set -eux; \
+    mkdir -p /tmp/build/libdeflate; \
+    curl -fsSL https://github.com/ebiggers/libdeflate/archive/refs/tags/v1.26.tar.gz \
+      | tar -xz --strip-components=1 -C /tmp/build/libdeflate; \
+    cmake -S /tmp/build/libdeflate -B /tmp/build/libdeflate-build \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX="${LIBDEFLATE}" \
+      -DCMAKE_INSTALL_LIBDIR=lib; \
+    cmake --build /tmp/build/libdeflate-build --parallel "$(nproc)"; \
+    cmake --install /tmp/build/libdeflate-build; \
+    rm -rf /tmp/build/libdeflate /tmp/build/libdeflate-build
+
+# HTSlib 1.24 — official release dated 2026-07-09.
+ENV HTSLIB=${SOFT}/htslib_1.24
+RUN set -eux; \
+    mkdir -p /tmp/build/htslib; \
+    curl -fsSL https://github.com/samtools/htslib/releases/download/1.24/htslib-1.24.tar.bz2 \
+      | tar -xj --strip-components=1 -C /tmp/build/htslib; \
+    cd /tmp/build/htslib; \
+    CPPFLAGS="-I${LIBDEFLATE}/include" \
+    LDFLAGS="-L${LIBDEFLATE}/lib -Wl,-rpath,${LIBDEFLATE}/lib" \
+      ./configure --prefix="${HTSLIB}" --libdir="${HTSLIB}/lib" --with-libdeflate; \
+    make -j"$(nproc)"; \
+    make install; \
+    rm -rf /tmp/build/htslib
+
+# SAMtools 1.24 — official release dated 2026-07-09.
+ENV SAMTOOLS=${SOFT}/samtools_1.24/bin/samtools
+RUN set -eux; \
+    mkdir -p /tmp/build/samtools; \
+    curl -fsSL https://github.com/samtools/samtools/releases/download/1.24/samtools-1.24.tar.bz2 \
+      | tar -xj --strip-components=1 -C /tmp/build/samtools; \
+    cd /tmp/build/samtools; \
+    CPPFLAGS="-I${HTSLIB}/include" \
+    LDFLAGS="-L${HTSLIB}/lib -Wl,-rpath,${HTSLIB}/lib -Wl,-rpath,${LIBDEFLATE}/lib" \
+      ./configure --prefix="${SOFT}/samtools_1.24" --with-htslib="${HTSLIB}"; \
+    make -j"$(nproc)"; \
+    make install; \
+    rm -rf /tmp/build/samtools
+
+ENV PATH="${SOFT}/libdeflate_1.26/bin:${SOFT}/htslib_1.24/bin:${SOFT}/samtools_1.24/bin:${PATH}"
+ENV LD_LIBRARY_PATH="${SOFT}/libdeflate_1.26/lib:${SOFT}/htslib_1.24/lib:${LD_LIBRARY_PATH}"
 WORKDIR /work
 CMD ["bash"]
