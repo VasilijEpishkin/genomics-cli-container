@@ -68,7 +68,7 @@ def validate_paths(input_path: Path, output_path: Path, log_path: Path) -> None:
                 )
 
 
-def resolve_contig(fasta: pysam.FastaFile, chrom: str) -> str:
+def resolve_contig(fasta: pysam.Fastafile, chrom: str) -> str:
     candidates = (chrom, chrom[3:])
     for candidate in candidates:
         if candidate in fasta.references:
@@ -86,7 +86,7 @@ def convert(input_path: Path, output_path: Path, ref_dir: Path) -> tuple[int, in
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     temp_path: Path | None = None
-    fasta_by_chrom: dict[str, pysam.FastaFile] = {}
+    fasta_by_chrom: dict[str, pysam.Fastafile] = {}
     processed = 0
     issues = 0
     strand_flipped = 0
@@ -142,7 +142,7 @@ def convert(input_path: Path, output_path: Path, ref_dir: Path) -> tuple[int, in
                         continue
                     candidate = None
                     try:
-                        candidate = pysam.FastaFile(str(fasta_path))
+                        candidate = pysam.Fastafile(str(fasta_path))
                         contig = resolve_contig(candidate, chrom)
                     except (OSError, ValueError) as exc:
                         if candidate is not None:
@@ -219,7 +219,11 @@ def main() -> int:
     except (OSError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
-    configure_logging(log_path)
+    try:
+        configure_logging(log_path)
+    except OSError as exc:
+        print(f"ERROR: cannot open log file {log_path}: {exc}", file=sys.stderr)
+        return 1
     logging.info("Starting conversion: input=%s output=%s ref_dir=%s", args.input, args.output, args.ref_dir)
     try:
         processed, strand_flipped, issues = convert(args.input, args.output, args.ref_dir)
