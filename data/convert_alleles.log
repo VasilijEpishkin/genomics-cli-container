@@ -1,0 +1,10 @@
+2026-10-22T16:00:34+0000 WARNING line 420: complemented allele pair to reference strand at chr1:145899155
+2026-10-22T16:00:35+0000 WARNING line 5967: complemented allele pair to reference strand at chr10:47420743
+2026-10-22T16:00:35+0000 WARNING line 5968: complemented allele pair to reference strand at chr10:47320207
+2026-10-22T16:00:35+0000 WARNING line 5969: complemented allele pair to reference strand at chr10:47268342
+2026-10-22T16:00:35+0000 WARNING line 5970: complemented allele pair to reference strand at chr10:47099482
+2026-10-22T16:00:35+0000 WARNING line 5977: complemented allele pair to reference strand at chr10:46031829
+2026-10-22T16:00:35+0000 WARNING line 6508: complemented allele pair to reference strand at chr11:54678670
+2026-10-22T16:00:35+0000 WARNING line 8062: complemented allele pair to reference strand at chr15:22907410
+2026-10-22T16:00:35+0000 WARNING line 8063: complemented allele pair to reference strand at chr15:22832212
+2026-10-22T16:00:35+0000 INFO Completed: 10000 variants written; 9 strand-complemented; 0 issues
